@@ -33,12 +33,6 @@ class MovingObject():
             self.loc += self.v
             self.rect.center = self.loc
 
-    def move(self):
-        if  not (0 <= self.loc.x <= screen.get_size()[0]):
-            self.v = -self.v
-
-        self.loc = self.loc + self.v
-        self.rect.center = self.loc
 
 class Brick(pygame.sprite.Sprite):
     def __init__(self, x, y):
