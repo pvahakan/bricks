@@ -5,6 +5,8 @@ pygame.init()
 
 width = 640
 height = 480
+brick_width = width / 10
+brick_height = height / 20
 
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
@@ -31,7 +33,7 @@ class MovingObject():
 class Brick(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface([20, 10])
+        self.image = pygame.Surface([brick_width, brick_height])
         self.image.fill('blue')
         self.rect = self.image.get_rect()
         self.loc = pygame.math.Vector2(x, y)
@@ -43,7 +45,16 @@ class Brick(pygame.sprite.Sprite):
 
 if __name__ == '__main__':
     ball = MovingObject()
-    brick = Brick(100, 100)
+    bricks = pygame.sprite.Group()
+    x = brick_width
+    y = brick_height
+    for i in range(54):
+        bricks.add(Brick(x, y))
+        if x < width - brick_width:
+            x += brick_width + 1
+        else:
+            x = brick_width
+            y += brick_height + 1
 
     while True:
         for event in pygame.event.get():
@@ -52,7 +63,7 @@ if __name__ == '__main__':
 
         screen.fill((0,0,0))
         ball.draw()
-        brick.draw()
+        bricks.draw(screen)
         ball.move()
         pygame.display.flip()
         clock.tick(60)
