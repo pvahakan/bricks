@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import pygame
+import random
 
 pygame.init()
 
@@ -15,7 +16,6 @@ class MovingObject():
     def __init__(self):
         self.loc = pygame.math.Vector2(320, 400)
         self.v = pygame.math.Vector2(5, 0)
-        # self.r = 20
         self.rect = pygame.Rect(0,0,20,10)
         self.rect.center = self.loc
 
@@ -46,10 +46,27 @@ class Brick(pygame.sprite.Sprite):
     def draw(self):
         pygame.draw.rect(screen, 'blue', self.rect)
 
+class Ball(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([10, 10])
+        self.rect = self.image.get_rect()
+        self.loc = pygame.math.Vector2(random.randint(50, width-50), height/2)
+        self.v = pygame.math.Vector2(1, 1)
+        self.rect.center = self.loc
+
+    def move(self):
+        self.loc += self.v
+        self.rect.center = self.loc
+
+    def draw(self):
+        pygame.draw.rect(screen, 'yellow', self.rect)
+
 
 if __name__ == '__main__':
     player = MovingObject()
     bricks = pygame.sprite.Group()
+    ball = Ball()
     x = brick_width
     y = brick_height
     left = False
@@ -88,5 +105,7 @@ if __name__ == '__main__':
         screen.fill((0,0,0))
         player.draw()
         bricks.draw(screen)
+        ball.draw()
+        ball.move()
         pygame.display.flip()
         clock.tick(60)
