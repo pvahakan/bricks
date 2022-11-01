@@ -11,21 +11,39 @@ clock = pygame.time.Clock()
 
 class MovingObject():
     def __init__(self):
-        self.loc = pygame.math.Vector2(320, 240)
-        self.v = pygame.math.Vector2(3, 0)
+        self.loc = pygame.math.Vector2(320, 400)
+        self.v = pygame.math.Vector2(5, 0)
         self.r = 20
+        self.rect = pygame.Rect(0,0,20,10)
+        self.rect.center = self.loc
 
     def draw(self):
-        pygame.draw.circle(screen, 'red', self.loc, self.r)
+        pygame.draw.rect(screen, 'red', self.rect)
+        # pygame.draw.circle(screen, 'red', self.loc, self.r)
 
     def move(self):
         if  not (0 <= self.loc.x <= screen.get_size()[0]):
             self.v = -self.v
 
         self.loc = self.loc + self.v
+        self.rect.center = self.loc
+
+class Brick(pygame.sprite.Sprite):
+    def __init__(self, x, y):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface([20, 10])
+        self.image.fill('blue')
+        self.rect = self.image.get_rect()
+        self.loc = pygame.math.Vector2(x, y)
+        self.rect.center = self.loc
+
+    def draw(self):
+        pygame.draw.rect(screen, 'blue', self.rect)
+
 
 if __name__ == '__main__':
     ball = MovingObject()
+    brick = Brick(100, 100)
 
     while True:
         for event in pygame.event.get():
@@ -34,6 +52,7 @@ if __name__ == '__main__':
 
         screen.fill((0,0,0))
         ball.draw()
+        brick.draw()
         ball.move()
         pygame.display.flip()
         clock.tick(60)
