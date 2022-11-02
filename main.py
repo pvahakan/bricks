@@ -59,6 +59,8 @@ class Ball(pygame.sprite.Sprite):
         self.rect.center = self.loc
 
     def move(self):
+        if self.loc.x <= 10 or self.loc.x >= width - 10:
+            self.v.x = -self.v.x
         if pygame.sprite.collide_rect(self.player, self):
             self.v.y = -self.v.y
 
