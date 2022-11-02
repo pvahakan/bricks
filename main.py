@@ -61,11 +61,15 @@ class Ball(pygame.sprite.Sprite):
     def move(self):
         if self.loc.x <= 10 or self.loc.x >= width - 10:
             self.v.x = -self.v.x
+
         if pygame.sprite.collide_rect(self.player, self):
             self.v.y = -self.v.y
 
         self.loc += self.v
         self.rect.center = self.loc
+
+    def change_y_direction(self):
+        self.v.y = -self.v.y
 
     def draw(self):
         pygame.draw.rect(screen, 'yellow', self.rect)
@@ -87,6 +91,12 @@ class Field(pygame.sprite.Sprite):
             else:
                 x = brick_width
                 y += brick_height + 1
+
+    def hit_brick(self):
+        hitted_brick = pygame.sprite.spritecollideany(self.ball, self.bricks)
+        if hitted_brick is not None:
+            self.bricks.remove(hitted_brick)
+            self.ball.change_y_direction()
 
     def draw(self):
         self.ball.draw()
@@ -172,6 +182,8 @@ if __name__ == '__main__':
         
         if right:
             player.move_right()
+
+        field.hit_brick()
 
         screen.fill((0,0,0))
         field.draw()
