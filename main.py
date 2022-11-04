@@ -17,7 +17,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.loc = pygame.math.Vector2(320, 400)
         self.v = pygame.math.Vector2(5, 0)
-        self.image = pygame.Surface([width, 10])
+        self.image = pygame.Surface([50, 10])
         self.rect = self.image.get_rect()
         self.rect.center = self.loc
         self.points = 0
@@ -118,10 +118,56 @@ class Field(pygame.sprite.Sprite):
         self.player.draw()
         self.bricks.draw(screen)
 
+class EventHandler():
+    def __init__(self):
+        self.events = pygame.event.get()
+
+    def get_events(self):
+        self.events = pygame.event.get()
+        return self.events
+
+    def left_arrow_pressed(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_LEFT:
+                return True
+
+        return False
+
+    def right_arrow_pressed(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RIGHT:
+                return True
+
+        return False
+
+    def left_arrow_not_pressed(self, event):
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_LEFT:
+                return True
+        
+        return False
+
+    def right_arrow_not_pressed(self, event):
+        if event.type == pygame.KEYUP:
+            if event.key == pygame.K_RIGHT:
+                return True
+        
+        return False
+
+    def close_pressed(self, event):
+        if event.type == pygame.QUIT:
+            return True
+        return False
+
+    def close_window(self):
+        exit()
+    
+
 if __name__ == '__main__':
     player = Player()
     ball = Ball(player)
     field = Field(ball, player)
+    event_handler = EventHandler()
 
     left = False
     right = False
@@ -129,21 +175,20 @@ if __name__ == '__main__':
     field.create_bricks(9)
 
     while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                exit()
+        events = event_handler.get_events()
+        for event in events:
+            if event_handler.close_pressed(event):
+                event_handler.close_window()
 
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    left = True
-                elif event.key == pygame.K_RIGHT:
-                    right = True
+            if event_handler.left_arrow_pressed(event):
+                left = True
+            elif event_handler.right_arrow_pressed(event):
+                right = True
 
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    left = False
-                elif event.key == pygame.K_RIGHT:
-                    right = False
+            if event_handler.left_arrow_not_pressed(event):
+                left = False
+            elif event_handler.right_arrow_not_pressed(event):
+                right = False
 
         if left:
             player.move_left()
