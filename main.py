@@ -12,7 +12,7 @@ brick_height = height / 20
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
 
-class MovingObject(pygame.sprite.Sprite):
+class Player(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.loc = pygame.math.Vector2(320, 400)
@@ -20,6 +20,7 @@ class MovingObject(pygame.sprite.Sprite):
         self.image = pygame.Surface([20, 10])
         self.rect = self.image.get_rect()
         self.rect.center = self.loc
+        self.points = 0
 
     def draw(self):
         pygame.draw.rect(screen, 'red', self.rect)
@@ -35,6 +36,9 @@ class MovingObject(pygame.sprite.Sprite):
             self.loc += self.v
             self.rect.center = self.loc
 
+    def add_point(self):
+        self.points += 1
+
 
 class Brick(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -49,7 +53,7 @@ class Brick(pygame.sprite.Sprite):
         pygame.draw.rect(screen, 'blue', self.rect)
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self, player : MovingObject):
+    def __init__(self, player : Player):
         pygame.sprite.Sprite.__init__(self)
         self.player = player
         self.image = pygame.Surface([10, 10])
@@ -75,7 +79,7 @@ class Ball(pygame.sprite.Sprite):
         pygame.draw.rect(screen, 'yellow', self.rect)
 
 class Field(pygame.sprite.Sprite):
-    def __init__(self, ball : Ball, player : MovingObject):
+    def __init__(self, ball : Ball, player : Player):
         super().__init__()
         self.ball = ball
         self.player = player
@@ -93,65 +97,21 @@ class Field(pygame.sprite.Sprite):
                 y += brick_height + 1
 
     def hit_brick(self):
-        hitted_brick = pygame.sprite.spritecollideany(self.ball, self.bricks)
-        if hitted_brick is not None:
-            self.bricks.remove(hitted_brick)
-            self.ball.change_y_direction()
+        """
+        Tarkistaa, osuuko pallo tiileen. Jos osuu, palauttaa kyseisen tiilen, jos ei palauttaa None.
+        """
+        return pygame.sprite.spritecollideany(self.ball, self.bricks)
+
+    def remove_brick(self, brick):
+        self.bricks.remove(brick)
 
     def draw(self):
         self.ball.draw()
         self.player.draw()
         self.bricks.draw(screen)
 
-def main():
-    player = MovingObject()
-    bricks = pygame.sprite.Group()
-    ball = Ball(player)
-    x = brick_width
-    y = brick_height
-    left = False
-    right = False
-    for i in range(54):
-        bricks.add(Brick(x, y))
-        if x < width - brick_width:
-            x += brick_width + 1
-        else:
-            x = brick_width
-            y += brick_height + 1
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                exit()
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    left = True
-                elif event.key == pygame.K_RIGHT:
-                    right = True
-
-            elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    left = False
-                elif event.key == pygame.K_RIGHT:
-                    right = False
-
-        if left:
-            player.move_left()
-        
-        if right:
-            player.move_right()
-
-        screen.fill((0,0,0))
-        player.draw()
-        bricks.draw(screen)
-        ball.draw()
-        ball.move()
-        pygame.display.flip()
-        clock.tick(60)
-
 if __name__ == '__main__':
-    player = MovingObject()
+    player = Player()
     ball = Ball(player)
     field = Field(ball, player)
 
@@ -183,7 +143,11 @@ if __name__ == '__main__':
         if right:
             player.move_right()
 
-        field.hit_brick()
+        hitted_brick = field.hit_brick()
+        if hitted_brick != None:
+            field.remove_brick(hitted_brick)
+            player.add_point()
+            ball.change_y_direction()
 
         screen.fill((0,0,0))
         field.draw()
