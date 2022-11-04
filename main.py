@@ -86,6 +86,11 @@ class Ball(pygame.sprite.Sprite):
     def draw(self):
         pygame.draw.rect(screen, 'yellow', self.rect)
 
+    def out_of_game(self):
+        if self.loc.y >= height:
+            return True
+        return False
+
 class Field(pygame.sprite.Sprite):
     def __init__(self, ball : Ball, player : Player):
         super().__init__()
@@ -160,6 +165,9 @@ class EventHandler():
         return False
 
     def close_window(self):
+        """
+        Ehkä turha funktio
+        """
         exit()
     
 
@@ -172,13 +180,17 @@ if __name__ == '__main__':
     left = False
     right = False
 
+    running = True
+
     field.create_bricks(9)
 
-    while True:
+    while running:
+
         events = event_handler.get_events()
         for event in events:
             if event_handler.close_pressed(event):
-                event_handler.close_window()
+                # event_handler.close_window()
+                running = False
 
             if event_handler.left_arrow_pressed(event):
                 left = True
@@ -202,9 +214,14 @@ if __name__ == '__main__':
             player.add_point()
             ball.change_y_direction()
 
+
         screen.fill((0,0,0))
         field.draw()
         player.show_points()
         ball.move()
+
+        if ball.out_of_game():
+            running = False
+
         pygame.display.flip()
         clock.tick(60)
