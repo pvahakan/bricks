@@ -17,7 +17,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.loc = pygame.math.Vector2(320, 400)
         self.v = pygame.math.Vector2(5, 0)
-        self.image = pygame.Surface([20, 10])
+        self.image = pygame.Surface([width, 10])
         self.rect = self.image.get_rect()
         self.rect.center = self.loc
         self.points = 0
@@ -59,12 +59,15 @@ class Ball(pygame.sprite.Sprite):
         self.image = pygame.Surface([10, 10])
         self.rect = self.image.get_rect()
         self.loc = pygame.math.Vector2(random.randint(50, width-50), height/2)
-        self.v = pygame.math.Vector2(-1, 1)
+        self.v = pygame.math.Vector2(-5, 5)
         self.rect.center = self.loc
 
     def move(self):
         if self.loc.x <= 10 or self.loc.x >= width - 10:
             self.v.x = -self.v.x
+
+        if self.loc.y <= 10:
+            self.v.y = -self.v.y
 
         if pygame.sprite.collide_rect(self.player, self):
             self.v.y = -self.v.y
@@ -118,7 +121,7 @@ if __name__ == '__main__':
     left = False
     right = False
 
-    field.create_bricks(54)
+    field.create_bricks(9)
 
     while True:
         for event in pygame.event.get():
