@@ -39,6 +39,11 @@ class Player(pygame.sprite.Sprite):
     def add_point(self):
         self.points += 1
 
+    def show_points(self):
+        font = pygame.font.SysFont(None, 24)
+        img = font.render(str(self.points), True, 'green')
+        screen.blit(img, (10, 10))
+
 
 class Brick(pygame.sprite.Sprite):
     def __init__(self, x, y):
@@ -154,6 +159,7 @@ if __name__ == '__main__':
 
         screen.fill((0,0,0))
         field.draw()
+        player.show_points()
         ball.move()
         pygame.display.flip()
         clock.tick(60)
