@@ -6,8 +6,8 @@ pygame.init()
 
 width = 640
 height = 480
-brick_width = width / 10
-brick_height = height / 20
+brick_width = width / 2
+brick_height = height / 5
 
 screen = pygame.display.set_mode((width, height))
 clock = pygame.time.Clock()
@@ -17,7 +17,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
         self.loc = pygame.math.Vector2(320, 400)
         self.v = pygame.math.Vector2(5, 0)
-        self.image = pygame.Surface([50, 10])
+        self.image = pygame.Surface([width, 10])
         self.rect = self.image.get_rect()
         self.rect.center = self.loc
         self.points = 0
@@ -52,10 +52,18 @@ class Brick(pygame.sprite.Sprite):
         self.image.fill('blue')
         self.rect = self.image.get_rect()
         self.loc = pygame.math.Vector2(x, y)
-        self.rect.center = self.loc
+        self.rect.x = self.loc.x
+        self.rect.y = self.loc.y
+        # self.rect.center = self.loc
 
     def draw(self):
         pygame.draw.rect(screen, 'blue', self.rect)
+
+    def location(self):
+        """
+        Returns bricks center point as a Vector2.
+        """
+        return self.loc
 
 class Ball(pygame.sprite.Sprite):
     def __init__(self, player : Player):
@@ -63,8 +71,9 @@ class Ball(pygame.sprite.Sprite):
         self.player = player
         self.image = pygame.Surface([10, 10])
         self.rect = self.image.get_rect()
-        self.loc = pygame.math.Vector2(random.randint(50, width-50), height/2)
-        self.v = pygame.math.Vector2(-5, 5)
+        # self.loc = pygame.math.Vector2(random.randint(50, width-50), height/2)
+        self.loc = pygame.math.Vector2(20, 20)
+        self.v = pygame.math.Vector2(4.0, 4.0)
         self.rect.center = self.loc
 
     def move(self):
@@ -80,8 +89,46 @@ class Ball(pygame.sprite.Sprite):
         self.loc += self.v
         self.rect.center = self.loc
 
+    def is_inside(self, brick):
+        print(f'ball.top: {self.rect.top} ball.bottom: {self.rect.bottom} ball.left: {self.rect.left} ball.right: {self.rect.right}')
+        print(f'brick.top: {brick.rect.top} brick.bottom: {brick.rect.bottom} brick.left: {brick.rect.left} brick.right: {brick.rect.right}')
+
+    def hit_bottom(self, brick):
+        if abs(brick.rect.bottom - self.rect.top) <= pygame.math.Vector2.magnitude(self.v):
+            print('osui pohjasta')
+            return True
+        return False
+
+    def hit_top(self, brick):
+        if abs(brick.rect.top - self.rect.bottom) <= pygame.math.Vector2.magnitude(self.v):
+            print('osui ylhäältä')
+            return True
+        return False
+
+    def hit_left(self, brick):
+        if abs(brick.rect.left - self.rect.right) <= pygame.math.Vector2.magnitude(self.v):
+            print('osui vasemmalta')
+            return True
+        return False
+
+    def hit_right(self, brick):
+        if abs(brick.rect.right - self.rect.left) <= pygame.math.Vector2.magnitude(self.v):
+            print('osui oikealta')
+            return True
+        return False
+
+    def hit_top_left(self, brick):
+        print('ylänurkkafunktio')
+        if abs(self.rect.bottom - brick.rect.top) <= 1 and abs(self.rect.right - brick.rect.left) <= 1: # pygame.math.Vector2.magnitude(self.v):
+            print('osui oikeaan ylänurkkaan')
+            return True
+        return False
+
     def change_y_direction(self):
         self.v.y = -self.v.y
+
+    def change_x_direction(self):
+        self.v.x = -self.v.x
 
     def draw(self):
         pygame.draw.rect(screen, 'yellow', self.rect)
@@ -98,9 +145,12 @@ class Field(pygame.sprite.Sprite):
         self.player = player
         self.bricks = pygame.sprite.Group()
 
+    def create_brick(self, x, y):
+        self.bricks.add(Brick(x, y))
+
     def create_bricks(self, n : int):
         x = brick_width
-        y = brick_height
+        y = brick_height + 50
         for i in range(n):
             self.bricks.add(Brick(x, y))
             if x < width - brick_width:
@@ -182,7 +232,8 @@ if __name__ == '__main__':
 
     running = True
 
-    field.create_bricks(9)
+    # field.create_bricks(9)
+    field.create_brick(50, 50)
 
     while running:
 
@@ -210,9 +261,23 @@ if __name__ == '__main__':
 
         hitted_brick = field.hit_brick()
         if hitted_brick != None:
-            field.remove_brick(hitted_brick)
-            player.add_point()
-            ball.change_y_direction()
+            ball.is_inside(hitted_brick)
+            if ball.hit_left(hitted_brick):
+                ball.change_x_direction()
+            elif ball.hit_right(hitted_brick):
+                ball.change_x_direction()
+            elif ball.hit_bottom(hitted_brick):
+                ball.change_y_direction()
+            elif ball.hit_top(hitted_brick):
+                ball.change_y_direction()
+            elif ball.hit_top_left(hitted_brick):
+                ball.change_x_direction()
+                ball.change_y_direction()
+            # if ball.hit_bottom(hitted_brick) or ball.hit_top(hitted_brick):
+            #     field.remove_brick(hitted_brick)
+            #     player.add_point()
+            #     ball.change_y_direction()
+
 
 
         screen.fill((0,0,0))
