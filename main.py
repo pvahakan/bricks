@@ -4,86 +4,88 @@ import random
 
 pygame.init()
 
-width = 640
-height = 480
-brick_width = width / 2
-brick_height = height / 5
+leveys = 640
+korkeus = 480
+tiilen_leveys = leveys / 10
+tiilen_korkeus = korkeus / 10
 
-screen = pygame.display.set_mode((width, height))
-clock = pygame.time.Clock()
+naytto = pygame.display.set_mode((leveys, korkeus))
+kello = pygame.time.Clock()
 
-class Player(pygame.sprite.Sprite):
+class Pelaaja(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__()
         self.loc = pygame.math.Vector2(320, 400)
         self.v = pygame.math.Vector2(5, 0)
-        self.image = pygame.Surface([width, 10])
+        self.image = pygame.Surface([leveys, 10])
         self.rect = self.image.get_rect()
         self.rect.center = self.loc
         self.points = 0
 
-    def draw(self):
-        pygame.draw.rect(screen, 'red', self.rect)
-        # pygame.draw.circle(screen, 'red', self.loc, self.r)
+    def piirra(self):
+        pygame.draw.rect(naytto, 'red', self.rect)
+        # pygame.draw.circle(naytto, 'red', self.loc, self.r)
 
-    def move_left(self):
-        if 20 <= self.loc.x <= screen.get_size()[0]:
+    def liiku_vasemmalle(self):
+        if 20 <= self.loc.x <= naytto.get_size()[0]:
             self.loc -= self.v
             self.rect.center = self.loc
 
-    def move_right(self):
-        if 0 <= self.loc.x <= screen.get_size()[0] - 20:
+    def liiku_oikealle(self):
+        if 0 <= self.loc.x <= naytto.get_size()[0] - 20:
             self.loc += self.v
             self.rect.center = self.loc
 
-    def add_point(self):
+    def lisaa_piste(self):
         self.points += 1
 
-    def show_points(self):
+    def nayta_pisteet(self):
         font = pygame.font.SysFont(None, 24)
         img = font.render(str(self.points), True, 'green')
-        screen.blit(img, (10, 10))
+        naytto.blit(img, (10, 10))
 
 
-class Brick(pygame.sprite.Sprite):
+class Tiili(pygame.sprite.Sprite):
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.Surface([brick_width, brick_height])
+        self.image = pygame.Surface([tiilen_leveys, tiilen_korkeus])
         self.image.fill('blue')
         self.rect = self.image.get_rect()
         self.loc = pygame.math.Vector2(x, y)
         self.rect.x = self.loc.x
         self.rect.y = self.loc.y
-        # self.rect.center = self.loc
+        self.rect.center = self.loc
 
-    def draw(self):
-        pygame.draw.rect(screen, 'blue', self.rect)
+    def piirra(self):
+        pygame.draw.rect(naytto, 'blue', self.rect)
 
-    def location(self):
+    def sijainti(self):
         """
         Returns bricks center point as a Vector2.
         """
         return self.loc
 
-class Ball(pygame.sprite.Sprite):
-    def __init__(self, player : Player):
+class Pallo(pygame.sprite.Sprite):
+    def __init__(self, pelaaja : Pelaaja):
         pygame.sprite.Sprite.__init__(self)
-        self.player = player
+        self.pelaaja = pelaaja
         self.image = pygame.Surface([10, 10])
         self.rect = self.image.get_rect()
-        # self.loc = pygame.math.Vector2(random.randint(50, width-50), height/2)
-        self.loc = pygame.math.Vector2(20, 20)
-        self.v = pygame.math.Vector2(4.0, 4.0)
+        self.loc = pygame.math.Vector2(random.randint(50, leveys-50), korkeus/2)
+        # self.loc = pygame.math.Vector2(10, tiilen_korkeus + 91)
+        # self.loc = pygame.math.Vector2(20, 20)
+        self.v = pygame.math.Vector2(3, 3)
+        print(pygame.math.Vector2.magnitude(self.v))
         self.rect.center = self.loc
 
-    def move(self):
-        if self.loc.x <= 10 or self.loc.x >= width - 10:
+    def liiku(self):
+        if self.loc.x <= 10 or self.loc.x >= leveys - 10:
             self.v.x = -self.v.x
 
         if self.loc.y <= 10:
             self.v.y = -self.v.y
 
-        if pygame.sprite.collide_rect(self.player, self):
+        if pygame.sprite.collide_rect(self.pelaaja, self):
             self.v.y = -self.v.y
 
         self.loc += self.v
@@ -93,123 +95,140 @@ class Ball(pygame.sprite.Sprite):
         print(f'ball.top: {self.rect.top} ball.bottom: {self.rect.bottom} ball.left: {self.rect.left} ball.right: {self.rect.right}')
         print(f'brick.top: {brick.rect.top} brick.bottom: {brick.rect.bottom} brick.left: {brick.rect.left} brick.right: {brick.rect.right}')
 
-    def hit_bottom(self, brick):
+    def osuu_pohjaan(self, brick):
         if abs(brick.rect.bottom - self.rect.top) <= pygame.math.Vector2.magnitude(self.v):
             print('osui pohjasta')
             return True
         return False
 
-    def hit_top(self, brick):
+    def osuu_ylareunaan(self, brick):
         if abs(brick.rect.top - self.rect.bottom) <= pygame.math.Vector2.magnitude(self.v):
             print('osui ylhäältä')
             return True
         return False
 
-    def hit_left(self, brick):
+    def osuu_vasempaan_reunaan(self, brick):
         if abs(brick.rect.left - self.rect.right) <= pygame.math.Vector2.magnitude(self.v):
             print('osui vasemmalta')
             return True
         return False
 
-    def hit_right(self, brick):
+    def osuu_oikeaan_reunaan(self, brick):
         if abs(brick.rect.right - self.rect.left) <= pygame.math.Vector2.magnitude(self.v):
             print('osui oikealta')
             return True
         return False
 
-    def hit_top_left(self, brick):
-        print('ylänurkkafunktio')
-        if abs(self.rect.bottom - brick.rect.top) <= 1 and abs(self.rect.right - brick.rect.left) <= 1: # pygame.math.Vector2.magnitude(self.v):
+    def osuu_vasempaan_ylanurkkaan(self, brick):
+        if abs(self.rect.bottom - brick.rect.top) <= 2 and abs(self.rect.right - brick.rect.left) <= 2: # pygame.math.Vector2.magnitude(self.v):
             print('osui oikeaan ylänurkkaan')
             return True
         return False
 
-    def change_y_direction(self):
-        self.v.y = -self.v.y
-
-    def change_x_direction(self):
-        self.v.x = -self.v.x
-
-    def draw(self):
-        pygame.draw.rect(screen, 'yellow', self.rect)
-
-    def out_of_game(self):
-        if self.loc.y >= height:
+    def osuu_oikeaan_ylanurkkaan(self, brick):
+        if abs(self.rect.bottom - brick.rect.top) <= 2 and abs(self.rect.left - brick.rect.right) <= 2: # pygame.math.Vector2.magnitude(self.v):
+            print('osui oikeaan ylänurkkaan')
             return True
         return False
 
-class Field(pygame.sprite.Sprite):
-    def __init__(self, ball : Ball, player : Player):
+    def osuu_vasempaan_alanurkkaan(self, brick):
+        if abs(self.rect.top - brick.rect.bottom) <= 2 and abs(self.rect.right - brick.rect.left) <= 2: # pygame.math.Vector2.magnitude(self.v):
+            print('osui vasempaan alanurkkaan')
+            return True
+        return False
+
+    def osuu_oikeaan_alanurkkaan(self, brick):
+        if abs(self.rect.top - brick.rect.bottom) <= 2 and abs(self.rect.left - brick.rect.right) <= 2: # pygame.math.Vector2.magnitude(self.v):
+            print('osui oikeaan alanurkkaan')
+            return True
+        return False
+
+    def muuta_y_suunta(self):
+        self.v.y = -self.v.y
+
+    def muuta_x_suunta(self):
+        self.v.x = -self.v.x
+
+    def piirra(self):
+        pygame.draw.rect(naytto, 'yellow', self.rect)
+
+    def pois_pelista(self):
+        if self.loc.y >= korkeus:
+            return True
+        return False
+
+class Kentta(pygame.sprite.Sprite):
+    def __init__(self, ball : Pallo, pelaaja : Pelaaja):
         super().__init__()
         self.ball = ball
-        self.player = player
+        self.pelaaja = pelaaja
         self.bricks = pygame.sprite.Group()
 
-    def create_brick(self, x, y):
-        self.bricks.add(Brick(x, y))
+    def lisaa_tiili(self, x, y):
+        self.bricks.add(Tiili(x, y))
 
-    def create_bricks(self, n : int):
-        x = brick_width
-        y = brick_height + 50
+    def luo_tiilet(self, n : int):
+        x = tiilen_leveys
+        y = tiilen_korkeus
         for i in range(n):
-            self.bricks.add(Brick(x, y))
-            if x < width - brick_width:
-                x += brick_width + 1
+            self.bricks.add(Tiili(x, y))
+            if x < leveys - tiilen_leveys:
+                x += tiilen_leveys + 1
             else:
-                x = brick_width
-                y += brick_height + 1
+                x = tiilen_leveys
+                y += tiilen_korkeus + 1
 
-    def hit_brick(self):
+    def osuma_tiileen(self):
         """
         Tarkistaa, osuuko pallo tiileen. Jos osuu, palauttaa kyseisen tiilen, jos ei palauttaa None.
         """
         return pygame.sprite.spritecollideany(self.ball, self.bricks)
 
-    def remove_brick(self, brick):
+    def poista_tiili(self, brick):
         self.bricks.remove(brick)
 
-    def draw(self):
-        self.ball.draw()
-        self.player.draw()
-        self.bricks.draw(screen)
+    def piirra(self):
+        self.ball.piirra()
+        self.pelaaja.piirra()
+        self.bricks.draw(naytto)
 
-class EventHandler():
+class TapahtumanKasittelija():
     def __init__(self):
         self.events = pygame.event.get()
 
-    def get_events(self):
+    def hae_tapahtumat(self):
         self.events = pygame.event.get()
         return self.events
 
-    def left_arrow_pressed(self, event):
+    def vasen_nuoli_painettu(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
                 return True
 
         return False
 
-    def right_arrow_pressed(self, event):
+    def oikea_nuoli_painettu(self, event):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
                 return True
 
         return False
 
-    def left_arrow_not_pressed(self, event):
+    def vasen_nuoli_ei_painettu(self, event):
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_LEFT:
                 return True
         
         return False
 
-    def right_arrow_not_pressed(self, event):
+    def oikea_nuoli_ei_painettu(self, event):
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_RIGHT:
                 return True
         
         return False
 
-    def close_pressed(self, event):
+    def rasti_klikattu(self, event):
         if event.type == pygame.QUIT:
             return True
         return False
@@ -222,71 +241,92 @@ class EventHandler():
     
 
 if __name__ == '__main__':
-    player = Player()
-    ball = Ball(player)
-    field = Field(ball, player)
-    event_handler = EventHandler()
+    pelaaja = Pelaaja()
+    ball = Pallo(pelaaja)
+    field = Kentta(ball, pelaaja)
+    event_handler = TapahtumanKasittelija()
 
     left = False
     right = False
 
     running = True
 
-    # field.create_bricks(9)
-    field.create_brick(50, 50)
+    field.luo_tiilet(9)
+    # field.lisaa_tiili(50, 50)
 
     while running:
 
-        events = event_handler.get_events()
+        events = event_handler.hae_tapahtumat()
         for event in events:
-            if event_handler.close_pressed(event):
+            if event_handler.rasti_klikattu(event):
                 # event_handler.close_window()
                 running = False
 
-            if event_handler.left_arrow_pressed(event):
+            if event_handler.vasen_nuoli_painettu(event):
                 left = True
-            elif event_handler.right_arrow_pressed(event):
+            elif event_handler.oikea_nuoli_painettu(event):
                 right = True
 
-            if event_handler.left_arrow_not_pressed(event):
+            if event_handler.vasen_nuoli_ei_painettu(event):
                 left = False
-            elif event_handler.right_arrow_not_pressed(event):
+            elif event_handler.oikea_nuoli_ei_painettu(event):
                 right = False
 
         if left:
-            player.move_left()
+            pelaaja.liiku_vasemmalle()
         
         if right:
-            player.move_right()
+            pelaaja.liiku_oikealle()
 
-        hitted_brick = field.hit_brick()
+        hitted_brick = field.osuma_tiileen()
         if hitted_brick != None:
             ball.is_inside(hitted_brick)
-            if ball.hit_left(hitted_brick):
-                ball.change_x_direction()
-            elif ball.hit_right(hitted_brick):
-                ball.change_x_direction()
-            elif ball.hit_bottom(hitted_brick):
-                ball.change_y_direction()
-            elif ball.hit_top(hitted_brick):
-                ball.change_y_direction()
-            elif ball.hit_top_left(hitted_brick):
-                ball.change_x_direction()
-                ball.change_y_direction()
-            # if ball.hit_bottom(hitted_brick) or ball.hit_top(hitted_brick):
-            #     field.remove_brick(hitted_brick)
-            #     player.add_point()
-            #     ball.change_y_direction()
+            if ball.osuu_vasempaan_reunaan(hitted_brick):
+                ball.muuta_x_suunta()
+                field.poista_tiili(hitted_brick)
+                pelaaja.lisaa_piste()
+            elif ball.osuu_oikeaan_reunaan(hitted_brick):
+                ball.muuta_x_suunta()
+                field.poista_tiili(hitted_brick)
+                pelaaja.lisaa_piste()
+            elif ball.osuu_pohjaan(hitted_brick):
+                ball.muuta_y_suunta()
+                field.poista_tiili(hitted_brick)
+                pelaaja.lisaa_piste()
+            elif ball.osuu_ylareunaan(hitted_brick):
+                ball.muuta_y_suunta()
+                field.poista_tiili(hitted_brick)
+                pelaaja.lisaa_piste()
+            elif ball.osuu_vasempaan_ylanurkkaan(hitted_brick):
+                ball.muuta_x_suunta()
+                ball.muuta_y_suunta()
+                field.poista_tiili(hitted_brick)
+                pelaaja.lisaa_piste()
+            elif ball.osuu_oikeaan_ylanurkkaan(hitted_brick):
+                ball.muuta_x_suunta()
+                ball.muuta_y_suunta()
+                field.poista_tiili(hitted_brick)
+                pelaaja.lisaa_piste()
+            elif ball.osuu_oikeaan_alanurkkaan(hitted_brick):
+                ball.muuta_x_suunta()
+                ball.muuta_y_suunta()
+                field.poista_tiili(hitted_brick)
+                pelaaja.lisaa_piste()
+            elif ball.osuu_vasempaan_alanurkkaan(hitted_brick):
+                ball.muuta_x_suunta()
+                ball.muuta_y_suunta()
+                field.poista_tiili(hitted_brick)
+                pelaaja.lisaa_piste()
 
 
 
-        screen.fill((0,0,0))
-        field.draw()
-        player.show_points()
-        ball.move()
+        naytto.fill((0,0,0))
+        field.piirra()
+        pelaaja.nayta_pisteet()
+        ball.liiku()
 
-        if ball.out_of_game():
+        if ball.pois_pelista():
             running = False
 
         pygame.display.flip()
-        clock.tick(60)
+        kello.tick(60)
